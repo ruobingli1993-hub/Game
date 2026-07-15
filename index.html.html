@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>🦕 恐龙成长大冒险 - 幼小衔接</title>
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Fredoka One', cursive, sans-serif;
+            background: linear-gradient(145deg, #fdf6e3 0%, #f5e6ca 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            margin: 0;
+            touch-action: manipulation;
+        }
+        /* ===== 主容器 ===== */
+        #app {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 248, 235, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 56px 56px 40px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), inset 0 2px 8px rgba(255, 255, 200, 0.6);
+            padding: 16px 18px 24px;
+            border: 3px solid #f0d5b0;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        /* 装饰小元素 */
+        #app::before {
+            content: '🌿🌴🌿';
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 28px;
+            letter-spacing: 20px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* ===== 顶部状态栏 ===== */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 215, 150, 0.4);
+            padding: 8px 16px;
+            border-radius: 60px;
+            margin-bottom: 12px;
+            border: 2px solid #ecc59a;
+            flex-wrap: wrap;
+            gap: 4px 8px;
+            position: relative;
+            z-index: 2;
+        }
+        .dino-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #5a3e2b;
+            flex-wrap: wrap;
+        }
+        .dino-info .emoji-big {
+            font-size: 32px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+        }
+        .dino-info .name {
+            background: #ffdbb5;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-size: 14px;
+            border: 2px solid #dba879;
+        }
+        .stats {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+            background: #ffeed5;
+            padding: 4px 16px;
+            border-radius: 40px;
+            border: 2px solid #dba879;
+            align-items: center;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stats .num {
+            font-weight: 800;
+            color: #b45f2a;
+            font-size: 17px;
+        }
+
+        /* ===== 进度条 ===== */
+        #grow-bar-wrap {
+            width: 100%;
+            height: 12px;
+            background: #eddcc8;
+            border-radius: 40px;
+            margin: 6px 0 12px;
+            border: 2px solid #dba879;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+        #grow-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f9d976, #f39c12, #e67e22);
+            border-radius: 40px;
+            transition: width 0.5s ease;
+            box-shadow: inset 0 2px 6px rgba(255, 215, 0, 0.4);
+        }
+        #grow-label {
+            position: absolute;
+            right: 8px;
+            top: -2px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #5a3e2b;
+            background: rgba(255, 248, 235, 0.7);
+            padding: 0 8px;
+            border-radius: 20px;
+        }
+
+        /* ===== 内容区域 ===== */
+        #main-area {
+            min-height: 380px;
+            position: relative;
+            z-index: 2;
+            padding: 4px 0;
+        }
+
+        /* ===== 通用卡片 ===== */
+        .card {
+            background: rgba(255, 248, 235, 0.75);
+            backdrop-filter: blur(2px);
+            border-radius: 40px;
+            padding: 20px 18px;
+            border: 3px solid #f0d5b0;
+            box-shadow: 0 8px 0 #c9a87e, 0 12px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.15s;
+        }
+        .card-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #4d3220;
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .card-title .badge {
+            font-size: 14px;
+            background: #f1c40f;
+            padding: 0 16px;
+            border-radius: 40px;
+            color: #3d2b1a;
+        }
+
+        /* ===== 按钮 ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.05);
+            touch-action: manipulation;
+            user-select: none;
+            min-width: 80px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.5px;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(145deg, #f7b731, #e67e22);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #f8c44a, #e67e22);
+        }
+        .btn-success {
+            background: linear-gradient(145deg, #58d68d, #27ae60);
+        }
+        .btn-success:hover {
+            background: linear-gradient(145deg, #6ddf9e, #27ae60);
+        }
+        .btn-danger {
+            background: linear-gradient(145deg, #f1948a, #e74c3c);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(145deg, #f5a89e, #e74c3c);
+        }
+        .btn-purple {
+            background: linear-gradient(145deg, #bb8fce, #8e44ad);
+        }
+        .btn-purple:hover {
+            background: linear-gradient(145deg, #c9a3d9, #8e44ad);
+        }
+        .btn-pink {
+            background: linear-gradient(145deg, #f5b7b1, #e67e7e);
+        }
+        .btn-gold {
+            background: linear-gradient(145deg, #f9e079, #f1c40f);
+            color: #4d3220;
+            border-color: #d4a017;
+        }
+        .btn-gold:hover {
+            background: linear-gradient(145deg, #fce68a, #f1c40f);
+        }
+        .btn-outline {
+            background: rgba(255, 248, 235, 0.8);
+            color: #5a3e2b;
+            border: 3px solid #dba879;
+            box-shadow: 0 4px 0 #c9a87e;
+        }
+        .btn-outline:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #c9a87e;
+        }
+        .btn-sm {
+            padding: 8px 18px;
+            font-size: 16px;
+            min-width: 60px;
+        }
+        .btn-lg {
+            padding: 18px 40px;
+            font-size: 24px;
+            min-width: 120px;
+        }
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+            pointer-events: none;
+        }
+
+        /* ===== 关卡选择 ===== */
+        .level-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .level-card {
+            background: #fff8ed;
+            border-radius: 28px;
+            padding: 16px 8px 14px;
+            text-align: center;
+            border: 3px solid #ecc59a;
+            box-shadow: 0 5px 0 #c9a87e;
+            cursor: pointer;
+            transition: all 0.12s;
+            touch-action: manipulation;
+        }
+        .level-card:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #c9a87e;
+        }
+        .level-card .icon {
+            font-size: 38px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .level-card .lname {
+            font-size: 16px;
+            font-weight: 700;
+            color: #4d3220;
+        }
+        .level-card .lsub {
+            font-size: 12px;
+            color: #7f6b58;
+        }
+        .level-card.locked {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+            cursor: not-allowed;
+        }
+        .level-card.locked:active {
+            transform: none;
+            box-shadow: 0 5px 0 #c9a87e;
+        }
+        .level-card .lock-icon {
+            font-size: 22px;
+        }
+        .level-card.done {
+            border-color: #58d68d;
+            background: #eafaf1;
+        }
+        .level-card .star {
+            color: #f1c40f;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        /* ===== 答题 ===== */
+        .question-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3d2b1a;
+            text-align: center;
+            padding: 10px 4px 16px;
+            background: rgba(255, 215, 150, 0.15);
+            border-radius: 30px;
+            margin-bottom: 14px;
+            line-height: 1.5;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .question-text .highlight {
+            background: #f9e079;
+            padding: 0 12px;
+            border-radius: 30px;
+            font-size: 28px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 8px 0 16px;
+        }
+        .option-btn {
+            background: #fffcf5;
+            border: 3px solid #ecc59a;
+            border-radius: 40px;
+            padding: 16px 8px;
+            font-size: 22px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #3d2b1a;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 5px 0 #c9a87e;
+            touch-action: manipulation;
+            text-align: center;
+            line-height: 1.3;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .option-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #c9a87e;
+        }
+        .option-btn.correct {
+            background: #a9dfbf;
+            border-color: #27ae60;
+            box-shadow: 0 5px 0 #1e8449;
+        }
+        .option-btn.wrong {
+            background: #f5b7b1;
+            border-color: #e74c3c;
+            box-shadow: 0 5px 0 #b03a2e;
+        }
+        .option-btn.reveal {
+            background: #f9e79f;
+            border-color: #f1c40f;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #c9a87e;
+        }
+
+        /* ===== 反馈 ===== */
+        .feedback-box {
+            text-align: center;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 10px 0 14px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .feedback-box.success {
+            background: #d5f5e3;
+            color: #1a7a42;
+            border: 3px solid #58d68d;
+        }
+        .feedback-box.fail {
+            background: #fadbd8;
+            color: #922b21;
+            border: 3px solid #f1948a;
+        }
+        .feedback-box.info {
+            background: #d6eaf8;
+            color: #1a5276;
+            border: 3px solid #85c1e9;
+        }
+
+        /* ===== 对战 ===== */
+        .battle-arena {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 0;
+        }
+        .battle-dino {
+            text-align: center;
+            flex: 1;
+            background: rgba(255, 248, 235, 0.6);
+            border-radius: 30px;
+            padding: 12px 6px;
+            border: 3px dashed #dba879;
+        }
+        .battle-dino .emoji {
+            font-size: 60px;
+            display: block;
+            line-height: 1.2;
+        }
+        .battle-dino .label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #5a3e2b;
+        }
+        .battle-dino .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #b45f2a;
+        }
+        .battle-vs {
+            font-size: 32px;
+            font-weight: 900;
+            color: #e74c3c;
+            text-shadow: 0 3px 0 #922b21;
+            padding: 0 4px;
+        }
+        .battle-result {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            padding: 10px;
+            border-radius: 30px;
+            margin-top: 6px;
+        }
+        .battle-result.win {
+            background: #d5f5e3;
+            color: #1a7a42;
+        }
+        .battle-result.lose {
+            background: #fadbd8;
+            color: #922b21;
+        }
+
+        /* ===== 恐龙展示 ===== */
+        .dino-show {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .dino-show .big-emoji {
+            font-size: 90px;
+            line-height: 1.2;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+            display: block;
+        }
+        .dino-show .dino-name {
+            font-size: 26px;
+            font-weight: 800;
+            color: #4d3220;
+            margin-top: 2px;
+        }
+        .dino-show .dino-level {
+            font-size: 16px;
+            color: #7f6b58;
+            background: #ffeed5;
+            padding: 0 20px;
+            border-radius: 40px;
+            display: inline-block;
+            border: 2px solid #dba879;
+        }
+
+        /* ===== 通用工具 ===== */
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .gap-sm {
+            gap: 8px;
+        }
+        .gap-md {
+            gap: 16px;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-12 {
+            margin-top: 12px;
+        }
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .w-full {
+            width: 100%;
+        }
+
+        /* ===== 动画 ===== */
+        @keyframes pop {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .pop-in {
+            animation: pop 0.25s ease forwards;
+        }
+        @keyframes shake {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-6deg);
+            }
+            75% {
+                transform: rotate(6deg);
+            }
+        }
+        .shake {
+            animation: shake 0.25s ease;
+        }
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+        .float {
+            animation: float 2s ease-in-out infinite;
+        }
+        @keyframes sparkle {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+        .sparkle {
+            animation: sparkle 0.8s ease infinite;
+        }
+
+        /* ===== 隐藏 ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 480px) {
+            #app {
+                padding: 12px 10px 18px;
+                border-radius: 36px;
+            }
+            #top-bar {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            .dino-info .emoji-big {
+                font-size: 26px;
+            }
+            .stats {
+                font-size: 12px;
+                padding: 2px 12px;
+            }
+            .card {
+                padding: 14px 12px;
+                border-radius: 30px;
+            }
+            .card-title {
+                font-size: 18px;
+            }
+            .question-text {
+                font-size: 20px;
+                padding: 8px 4px 12px;
+                min-height: 56px;
+            }
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .option-btn {
+                font-size: 18px;
+                padding: 12px 6px;
+                min-height: 60px;
+                border-radius: 30px;
+            }
+            .btn {
+                font-size: 17px;
+                padding: 10px 20px;
+                min-width: 60px;
+            }
+            .btn-lg {
+                font-size: 20px;
+                padding: 14px 28px;
+            }
+            .level-grid {
+                gap: 8px;
+            }
+            .level-card {
+                padding: 12px 4px 10px;
+            }
+            .level-card .icon {
+                font-size: 30px;
+            }
+            .battle-dino .emoji {
+                font-size: 44px;
+            }
+            .battle-dino .value {
+                font-size: 26px;
+            }
+            .battle-vs {
+                font-size: 24px;
+            }
+            .dino-show .big-emoji {
+                font-size: 68px;
+            }
+            .feedback-box {
+                font-size: 17px;
+                padding: 10px;
+            }
+        }
+        @media (max-width: 380px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .option-btn {
+                font-size: 16px;
+                min-height: 50px;
+                padding: 8px 4px;
+            }
+            .question-text {
+                font-size: 17px;
+            }
+            .btn {
+                font-size: 15px;
+                padding: 8px 14px;
+            }
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f5e6ca;
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dba879;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- ===== 顶部状态栏 ===== -->
+        <div id="top-bar">
+            <div class="dino-info">
+                <span class="emoji-big" id="dinoEmoji">🦕</span>
+                <span class="name" id="dinoName">小三角龙</span>
+                <span style="font-size:13px;color:#7f6b58;">Lv.<span id="dinoLevel">1</span></span>
+            </div>
+            <div class="stats">
+                <span>🍖 <span class="num" id="foodCount">0</span></span>
+                <span>⭐ <span class="num" id="starCount">0</span></span>
+            </div>
+        </div>
+        <!-- ===== 成长进度条 ===== -->
+        <div id="grow-bar-wrap">
+            <div id="grow-bar" style="width:0%;"></div>
+            <span id="grow-label">0/100</span>
+        </div>
+
+        <!-- ===== 主内容 ===== -->
+        <div id="main-area">
+            <!-- 默认: 首页 -->
+            <div id="page-home" class="pop-in">
+                <div class="card">
+                    <div class="dino-show">
+                        <span class="big-emoji float" id="homeDinoEmoji">🦕</span>
+                        <div class="dino-name" id="homeDinoName">小三角龙</div>
+                        <div class="dino-level">🌟 成长中</div>
+                    </div>
+                    <div class="flex-center gap-md mt-8" style="flex-wrap:wrap;">
+                        <button class="btn btn-primary btn-lg" id="btnGoLearn">📚 学习冒险</button>
+                        <button class="btn btn-danger btn-lg" id="btnGoBattle">⚔️ 恐龙对战</button>
+                    </div>
+                    <div class="flex-center gap-sm mt-8">
+                        <button class="btn btn-success btn-sm" id="btnFeed">🍖 喂食 (+1)</button>
+                        <button class="btn btn-gold btn-sm" id="btnReset">🔄 重置</button>
+                    </div>
+                    <div class="text-center mt-8" style="font-size:14px;color:#7f6b58;">
+                        💡 完成学习关卡获得食物和星星，喂食恐龙让它成长！
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关卡选择 -->
+            <div id="page-levels" class="hidden">
+                <div class="card">
+                    <div class="card-title">🗺️ 选择冒险关卡</div>
+                    <div class="level-grid" id="levelGrid">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                    <div class="flex-center mt-12">
+                        <button class="btn btn-outline" id="btnBackHome">🏠 回家</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 答题 -->
+            <div id="page-quiz" class="hidden">
+                <div class="card">
+                    <div class="card-title" id="quizTitle">📖 关卡名称 <span class="badge" id="quizProgress">1/5</span></div>
+                    <div class="question-text" id="questionText">题目</div>
+                    <div class="options-grid" id="optionsContainer">
+                        <!-- 由 JS 生成 -->
+                    </div>
+                    <div class="feedback-box hidden" id="feedbackBox"></div>
+                    <div class="flex-center gap-sm">
+                        <button class="btn btn-outline btn-sm" id="btnQuizBack">↩ 返回</button>
+                        <button class="btn btn-success btn-sm hidden" id="btnNextQuestion">➡️ 下一题</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 对战 -->
+            <div id="page-battle" class="hidden">
+                <div class="card">
+                    <div class="card-title">⚔️ 恐龙对战 · 比大小</div>
+                    <div class="battle-arena">
+                        <div class="battle-dino">
+                            <span class="emoji" id="battleMyEmoji">🦕</span>
+                            <span class="label" id="battleMyLabel">你的恐龙</span>
+                            <span class="value" id="battleMyValue">5</span>
+                        </div>
+                        <div class="battle-vs">VS</div>
+                        <div class="battle-dino">
+                            <span class="emoji" id="battleEnemyEmoji">🦖</span>
+                            <span class="label" id="battleEnemyLabel">野恐龙</span>
+                            <span class="value" id="battleEnemyValue">3</span>
+                        </div>
+                    </div>
+                    <div class="battle-result hidden" id="battleResult"></div>
+                    <div class="flex-center gap-sm mt-8">
+                        <button class="btn btn-danger btn-lg" id="btnBattleFight">⚡ 来战！</button>
+                        <button class="btn btn-outline" id="btnBattleBack">🏠 回家</button>
+                    </div>
+                    <div class="text-center mt-8" style="font-size:14px;color:#7f6b58;">
+                        🎯 你的恐龙数值 = 食物数 + 等级 × 2，比野恐龙大就能赢！
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 底部提示 ===== -->
+        <div style="text-align:center;font-size:12px;color:#bba88a;margin-top:6px;padding-top:6px;border-top:2px solid #f0d5b0;letter-spacing:1px;">
+            🦕 恐龙成长大冒险 · 幼小衔接乐园
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        //  🦕  恐龙成长大冒险  -  完整游戏逻辑
+        // =====================================================================
+
+        // ---------- 游戏数据 ----------
+        const LEVELS = [{
+            id: 'pinyin',
+            name: '🔤 拼音王国',
+            desc: '声母韵母大冒险',
+            icon: '🔤',
+            color: '#bb8fce'
+        }, {
+            id: 'shizi',
+            name: '📖 识字乐园',
+            desc: '认识常用汉字',
+            icon: '📖',
+            color: '#58d68d'
+        }, {
+            id: 'yuedu',
+            name: '📚 阅读天地',
+            desc: '短句理解小达人',
+            icon: '📚',
+            color: '#f7b731'
+        }, {
+            id: 'shuxue',
+            name: '🔢 数字魔法',
+            desc: '10以内加减法',
+            icon: '🔢',
+            color: '#f1948a'
+        }, {
+            id: 'xiezi',
+            name: '✏️ 书写达人',
+            desc: '数字拼音认一认',
+            icon: '✏️',
+            color: '#85c1e9'
+        }];
+
+        // 所有题目 (每个关卡5题)
+        const QUESTIONS = [
+            // ---- 拼音 ----
+            { level: 'pinyin', q: '哪个是声母 "b" ？', opts: ['b', 'p', 'm', 'f'], ans: 0, hint: 'b 像广播' },
+            { level: 'pinyin', q: '哪个是声母 "d" ？', opts: ['d', 't', 'n', 'l'], ans: 0, hint: 'd 像马蹄' },
+            { level: 'pinyin', q: '哪个是声母 "g" ？', opts: ['g', 'k', 'h', 'j'], ans: 0, hint: 'g 像鸽子' },
+            { level: 'pinyin', q: '哪个是声母 "z" ？', opts: ['z', 'c', 's', 'zh'], ans: 0, hint: 'z 像字母Z' },
+            { level: 'pinyin', q: '哪个是声母 "ch" ？', opts: ['ch', 'sh', 'zh', 'r'], ans: 0, hint: 'ch 是翘舌音' },
+            // ---- 识字 ----
+            { level: 'shizi', q: '"大" 字怎么读？', opts: ['dà', 'xiǎo', 'duō', 'shǎo'], ans: 0, hint: '大 表示很大' },
+            { level: 'shizi', q: '"小" 字怎么读？', opts: ['xiǎo', 'dà', 'shàng', 'xià'], ans: 0, hint: '小 表示很小' },
+            { level: 'shizi', q: '"上" 字怎么读？', opts: ['shàng', 'xià', 'zuǒ', 'yòu'], ans: 0, hint: '上 是方位' },
+            { level: 'shizi', q: '"人" 字怎么读？', opts: ['rén', 'dà', 'xiǎo', 'shān'], ans: 0, hint: '人 就是人' },
+            { level: 'shizi', q: '"山" 字怎么读？', opts: ['shān', 'shuǐ', 'huǒ', 'mù'], ans: 0, hint: '山 是高山' },
+            // ---- 阅读 ----
+            { level: 'yuedu', q: '"太阳出来了" 是什么意思？', opts: ['天亮了', '天黑了', '下雨了', '刮风了'], ans: 0,
+            hint: '太阳出来就是白天' },
+            { level: 'yuedu', q: '"小鸟在树上唱歌" 小鸟在哪里？', opts: ['在树上', '在水里', '在地上', '在天上'], ans: 0,
+            hint: '树上唱歌' },
+            { level: 'yuedu', q: '"妈妈我爱您" 表达了什么？', opts: ['爱', '恨', '生气', '害怕'], ans: 0, hint: '爱妈妈' },
+            { level: 'yuedu', q: '"春天来了，花儿开了" 什么季节花开了？', opts: ['春天', '冬天', '夏天', '秋天'], ans: 0,
+            hint: '春天花会开' },
+            { level: 'yuedu', q: '"小朋友们在玩游戏" 谁在玩？', opts: ['小朋友', '大人', '老人', '动物'], ans: 0, hint: '小朋友' },
+            // ---- 数学 ----
+            { level: 'shuxue', q: '2 + 3 = ？', opts: ['4', '5', '6', '7'], ans: 1, hint: '2+3=5' },
+            { level: 'shuxue', q: '5 - 2 = ？', opts: ['2', '3', '4', '5'], ans: 1, hint: '5-2=3' },
+            { level: 'shuxue', q: '4 + 4 = ？', opts: ['6', '7', '8', '9'], ans: 2, hint: '4+4=8' },
+            { level: 'shuxue', q: '9 - 3 = ？', opts: ['5', '6', '7', '8'], ans: 1, hint: '9-3=6' },
+            { level: 'shuxue', q: '3 + 6 = ？', opts: ['8', '9', '10', '7'], ans: 1, hint: '3+6=9' },
+            // ---- 书写 ----
+            { level: 'xiezi', q: '哪个是正确书写的 "3" ？', opts: ['3', 'Ɛ', 'З', '三'], ans: 0, hint: '3 像耳朵' },
+            { level: 'xiezi', q: '哪个是正确书写的 "a" ？', opts: ['a', 'ɑ', 'α', 'ā'], ans: 0, hint: 'a 是拼音字母' },
+            { level: 'xiezi', q: '哪个是正确书写的 "5" ？', opts: ['5', 'S', '$', '五'], ans: 0, hint: '5 像钩子' },
+            { level: 'xiezi', q: '哪个是正确书写的 "o" ？', opts: ['o', '0', 'О', 'ō'], ans: 0, hint: 'o 是圆形' },
+            { level: 'xiezi', q: '哪个是正确书写的 "2" ？', opts: ['2', 'Z', 'z', '二'], ans: 0, hint: '2 像小鸭子' }
+        ];
+
+        // ---------- 游戏状态 ----------
+        let state = {
+            // 恐龙
+            dinoName: '小三角龙',
+            dinoEmoji: '🦕',
+            level: 1, // 1~3
+            exp: 0, // 0~100
+            food: 0,
+            stars: 0,
+            // 关卡进度
+            levelUnlocked: 0, // 索引 0~4
+            levelStars: [0, 0, 0, 0, 0], // 每个关卡获得的星星数
+            levelDone: [false, false, false, false, false],
+            // 当前答题
+            currentLevelIdx: 0,
+            currentQuestionIdx: 0,
+            answered: false,
+            // 对战
+            battleEnemyValue: 0,
+            battleMyValue: 0,
+            battleResult: null, // 'win' | 'lose' | null
+        };
+
+        // 恐龙进化配置
+        const DINO_STAGES = [
+            { name: '小三角龙', emoji: '🦕', minExp: 0, maxExp: 34 },
+            { name: '三角龙', emoji: '🦕', minExp: 35, maxExp: 69 },
+            { name: '霸王龙', emoji: '🦖', minExp: 70, maxExp: 100 },
+        ];
+
+        // ---------- DOM 引用 ----------
+        const $ = id => document.getElementById(id);
+        const $$ = sel => document.querySelectorAll(sel);
+
+        const dom = {
+            dinoEmoji: $('dinoEmoji'),
+            dinoName: $('dinoName'),
+            dinoLevel: $('dinoLevel'),
+            foodCount: $('foodCount'),
+            starCount: $('starCount'),
+            growBar: $('grow-bar'),
+            growLabel: $('grow-label'),
+
+            homeDinoEmoji: $('homeDinoEmoji'),
+            homeDinoName: $('homeDinoName'),
+
+            pageHome: $('page-home'),
+            pageLevels: $('page-levels'),
+            pageQuiz: $('page-quiz'),
+            pageBattle: $('page-battle'),
+
+            levelGrid: $('levelGrid'),
+            quizTitle: $('quizTitle'),
+            quizProgress: $('quizProgress'),
+            questionText: $('questionText'),
+            optionsContainer: $('optionsContainer'),
+            feedbackBox: $('feedbackBox'),
+            btnNextQuestion: $('btnNextQuestion'),
+            btnQuizBack: $('btnQuizBack'),
+            btnBackHome: $('btnBackHome'),
+            btnGoLearn: $('btnGoLearn'),
+            btnGoBattle: $('btnGoBattle'),
+            btnFeed: $('btnFeed'),
+            btnReset: $('btnReset'),
+
+            battleMyEmoji: $('battleMyEmoji'),
+            battleMyLabel: $('battleMyLabel'),
+            battleMyValue: $('battleMyValue'),
+            battleEnemyEmoji: $('battleEnemyEmoji'),
+            battleEnemyLabel: $('battleEnemyLabel'),
+            battleEnemyValue: $('battleEnemyValue'),
+            battleResult: $('battleResult'),
+            btnBattleFight: $('btnBattleFight'),
+            btnBattleBack: $('btnBattleBack'),
+        };
+
+        // ---------- 工具函数 ----------
+        function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = rand(0, i);
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // ---------- 核心逻辑 ----------
+        function getDinoStage() {
+            const e = state.exp;
+            if (e <= 34) return DINO_STAGES[0];
+            if (e <= 69) return DINO_STAGES[1];
+            return DINO_STAGES[2];
+        }
+
+        function updateDinoUI() {
+            const stage = getDinoStage();
+            state.dinoName = stage.name;
+            state.dinoEmoji = stage.emoji;
+            state.level = DINO_STAGES.indexOf(stage) + 1;
+
+            dom.dinoEmoji.textContent = state.dinoEmoji;
+            dom.dinoName.textContent = state.dinoName;
+            dom.dinoLevel.textContent = state.level;
+            dom.homeDinoEmoji.textContent = state.dinoEmoji;
+            dom.homeDinoName.textContent = state.dinoName;
+
+            dom.foodCount.textContent = state.food;
+            dom.starCount.textContent = state.stars;
+
+            const pct = Math.min(100, (state.exp / 100) * 100);
+            dom.growBar.style.width = pct + '%';
+            dom.growLabel.textContent = `${Math.floor(state.exp)}/100`;
+
+            // 更新对战中的恐龙
+            dom.battleMyEmoji.textContent = state.dinoEmoji;
+            dom.battleMyLabel.textContent = state.dinoName;
+        }
+
+        function addExp(amount) {
+            state.exp = Math.min(100, state.exp + amount);
+            updateDinoUI();
+            // 检查是否进化
+            const oldStage = getDinoStage();
+            // 触发进化特效（简单）
+            if (state.exp >= 35 && state.exp - amount < 35) {
+                showFeedback('🎉 进化！三角龙！', 'success');
+            } else if (state.exp >= 70 && state.exp - amount < 70) {
+                showFeedback('🌟 超级进化！霸王龙！', 'success');
+            }
+        }
+
+        function addFood(amount) {
+            state.food += amount;
+            updateDinoUI();
+        }
+
+        function addStars(amount) {
+            state.stars += amount;
+            updateDinoUI();
+        }
+
+        function showFeedback(msg, type = 'info', duration = 2000) {
+            const fb = dom.feedbackBox;
+            fb.textContent = msg;
+            fb.className = 'feedback-box ' + type;
+            fb.classList.remove('hidden');
+            clearTimeout(fb._timer);
+            if (duration > 0) {
+                fb._timer = setTimeout(() => {
+                    fb.classList.add('hidden');
+                }, duration);
+            }
+        }
+
+        function hideFeedback() {
+            dom.feedbackBox.classList.add('hidden');
+            clearTimeout(dom.feedbackBox._timer);
+        }
+
+        // ---------- 页面切换 ----------
+        function showPage(pageId) {
+            ['page-home', 'page-levels', 'page-quiz', 'page-battle'].forEach(id => {
+                const el = $(id);
+                if (id === pageId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('pop-in');
+                    setTimeout(() => el.classList.remove('pop-in'), 300);
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('pop-in');
+                }
+            });
+            hideFeedback();
+        }
+
+        // ---------- 关卡选择 ----------
+        function renderLevels() {
+            const grid = dom.levelGrid;
+            grid.innerHTML = '';
+            LEVELS.forEach((lv, idx) => {
+                const unlocked = idx <= state.levelUnlocked;
+                const done = state.levelDone[idx];
+                const stars = state.levelStars[idx] || 0;
+                const div = document.createElement('div');
+                div.className = 'level-card' + (unlocked ? '' : ' locked') + (done ? ' done' : '');
+                div.innerHTML = `
+                    <span class="icon">${lv.icon}</span>
+                    <div class="lname">${lv.name}</div>
+                    <div class="lsub">${lv.desc}</div>
+                    ${done ? `<div class="star">${'⭐'.repeat(Math.min(stars,5))}</div>` : ''}
+                    ${!unlocked ? '<div class="lock-icon">🔒</div>' : ''}
+                `;
+                if (unlocked) {
+                    div.addEventListener('click', () => startQuiz(idx));
+                }
+                grid.appendChild(div);
+            });
+        }
+
+        // ---------- 答题 ----------
+        function startQuiz(levelIdx) {
+            state.currentLevelIdx = levelIdx;
+            state.currentQuestionIdx = 0;
+            state.answered = false;
+            // 收集该关卡的题目
+            const qs = QUESTIONS.filter(q => q.level === LEVELS[levelIdx].id);
+            // 打乱题目顺序（但保持一致性）
+            state._quizQuestions = shuffle([...qs]);
+            showPage('page-quiz');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const qs = state._quizQuestions;
+            const idx = state.currentQuestionIdx;
+            if (idx >= qs.length) {
+                // 关卡完成
+                finishLevel();
+                return;
+            }
+            const q = qs[idx];
+            const total = qs.length;
+            dom.quizTitle.innerHTML =
+                `${LEVELS[state.currentLevelIdx].icon} ${LEVELS[state.currentLevelIdx].name} <span class="badge" id="quizProgress">${idx+1}/${total}</span>`;
+            dom.questionText.innerHTML = q.q;
+            dom.quizProgress.textContent = `${idx+1}/${total}`;
+
+            const container = dom.optionsContainer;
+            container.innerHTML = '';
+            // 选项打乱
+            const optIndices = q.opts.map((_, i) => i);
+            shuffle(optIndices);
+            q._optOrder = optIndices;
+
+            optIndices.forEach((origIdx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = q.opts[origIdx];
+                btn.dataset.origIdx = origIdx;
+                btn.addEventListener('click', () => handleOptionClick(btn, origIdx));
+                container.appendChild(btn);
+            });
+
+            state.answered = false;
+            dom.btnNextQuestion.classList.add('hidden');
+            hideFeedback();
+            dom.feedbackBox.className = 'feedback-box hidden';
+        }
+
+        function handleOptionClick(btn, origIdx) {
+            if (state.answered) return;
+            const qs = state._quizQuestions;
+            const idx = state.currentQuestionIdx;
+            const q = qs[idx];
+            const correct = origIdx === q.ans;
+            state.answered = true;
+
+            // 禁用所有选项
+            const allBtns = dom.optionsContainer.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            // 高亮
+            allBtns.forEach((b, i) => {
+                const oi = parseInt(b.dataset.origIdx);
+                if (oi === q.ans) b.classList.add('correct');
+                if (b === btn && !correct) b.classList.add('wrong');
+            });
+
+            if (correct) {
+                // 答对：+1食物，+5经验
+                addFood(1);
+                addExp(5);
+                showFeedback('✅ 太棒啦！ +1🍖 +5⭐', 'success', 1200);
+                // 记录星星（关卡内累计）
+                if (!state._quizStars) state._quizStars = 0;
+                state._quizStars += 1;
+            } else {
+                showFeedback(`❌ 再想想哦～ 正确答案是：${q.opts[q.ans]}`, 'fail', 1500);
+            }
+
+            // 显示下一题按钮
+            dom.btnNextQuestion.classList.remove('hidden');
+            // 如果是最后一题，改变按钮文字
+            if (idx + 1 >= qs.length) {
+                dom.btnNextQuestion.textContent = '🏆 完成关卡！';
+            } else {
+                dom.btnNextQuestion.textContent = '➡️ 下一题';
+            }
+        }
+
+        function finishLevel() {
+            const lvIdx = state.currentLevelIdx;
+            const stars = state._quizStars || 0;
+            // 至少完成1题才算完成
+            if (stars > 0) {
+                state.levelDone[lvIdx] = true;
+                state.levelStars[lvIdx] = Math.max(state.levelStars[lvIdx] || 0, stars);
+                // 解锁下一关
+                if (lvIdx + 1 > state.levelUnlocked && lvIdx + 1 < LEVELS.length) {
+                    state.levelUnlocked = lvIdx + 1;
+                }
+                // 额外奖励
+                const bonus = stars >= 4 ? 3 : stars >= 3 ? 2 : 1;
+                addFood(bonus);
+                addExp(bonus * 3);
+                addStars(bonus);
+                showFeedback(`🎉 关卡完成！获得 ${bonus}🍖 额外奖励！`, 'success', 2500);
+            } else {
+                showFeedback('😅 再试一次吧，答对题目才能过关哦！', 'info', 2000);
+                // 重置该关卡
+                state._quizQuestions = QUESTIONS.filter(q => q.level === LEVELS[lvIdx].id);
+                state._quizStars = 0;
+                state.currentQuestionIdx = 0;
+                state.answered = false;
+                renderQuestion();
+                return;
+            }
+
+            state._quizStars = 0;
+            // 更新UI
+            updateDinoUI();
+            renderLevels();
+
+            // 延迟返回关卡选择
+            setTimeout(() => {
+                showPage('page-levels');
+                renderLevels();
+            }, 1800);
+        }
+
+        // 下一题
+        dom.btnNextQuestion.addEventListener('click', () => {
+            const qs = state._quizQuestions;
+            if (state.currentQuestionIdx + 1 >= qs.length) {
+                // 完成关卡
+                finishLevel();
+            } else {
+                state.currentQuestionIdx++;
+                state.answered = false;
+                renderQuestion();
+            }
+        });
+
+        dom.btnQuizBack.addEventListener('click', () => {
+            if (confirm('确定要退出吗？进度将丢失～')) {
+                showPage('page-levels');
+                renderLevels();
+            }
+        });
+
+        // ---------- 对战 ----------
+        function initBattle() {
+            // 我方数值 = 食物数 + 等级*2 + 随机0~2
+            const myBase = state.food + state.level * 2;
+            state.battleMyValue = myBase + rand(0, 2);
+            // 敌方数值 = 3~15 随机
+            state.battleEnemyValue = rand(3, 15);
+            state.battleResult = null;
+
+            dom.battleMyValue.textContent = state.battleMyValue;
+            dom.battleEnemyValue.textContent = state.battleEnemyValue;
+            dom.battleResult.classList.add('hidden');
+            dom.battleResult.textContent = '';
+            dom.btnBattleFight.disabled = false;
+            // 随机敌方恐龙
+            const enemies = ['🦖', '🦕', '🐉', '🦎'];
+            dom.battleEnemyEmoji.textContent = enemies[rand(0, enemies.length - 1)];
+            dom.battleMyEmoji.textContent = state.dinoEmoji;
+            dom.battleMyLabel.textContent = state.dinoName;
+        }
+
+        dom.btnBattleFight.addEventListener('click', () => {
+            if (state.food < 1) {
+                showFeedback('🍖 食物不够！先去学习获取食物吧！', 'info', 2000);
+                return;
+            }
+            // 消耗1食物
+            addFood(-1);
+
+            const myVal = state.battleMyValue;
+            const enVal = state.battleEnemyValue;
+            const win = myVal > enVal;
+            state.battleResult = win ? 'win' : 'lose';
+
+            const resultEl = dom.battleResult;
+            resultEl.classList.remove('hidden', 'win', 'lose');
+            if (win) {
+                resultEl.className = 'battle-result win';
+                const reward = rand(1, 3);
+                addFood(reward);
+                addExp(reward * 2);
+                addStars(1);
+                resultEl.textContent = `🎉 胜利！获得 ${reward}🍖！`;
+                showFeedback(`🎊 太厉害了！+${reward}🍖`, 'success', 1500);
+            } else {
+                resultEl.className = 'battle-result lose';
+                resultEl.textContent = `😅 哎呀，野恐龙更强！再试试吧！`;
+                showFeedback('💪 加油！多学习成长后再来挑战！', 'info', 1500);
+            }
+            dom.btnBattleFight.disabled = true;
+            // 更新数值显示
+            dom.battleMyValue.textContent = myVal;
+            dom.battleEnemyValue.textContent = enVal;
+            updateDinoUI();
+            setTimeout(() => {
+                initBattle();
+            }, 2000);
+        });
+
+        dom.btnBattleBack.addEventListener('click', () => {
+            showPage('page-home');
+        });
+
+        // ---------- 喂食 ----------
+        dom.btnFeed.addEventListener('click', () => {
+            if (state.food <= 0) {
+                showFeedback('🍖 没有食物了！去学习闯关获得吧！', 'info', 1500);
+                return;
+            }
+            addFood(-1);
+            addExp(8);
+            showFeedback('🍖 咕噜咕噜～ 恐龙吃饱了！ +8⭐', 'success', 1200);
+            updateDinoUI();
+        });
+
+        // ---------- 重置 ----------
+        dom.btnReset.addEventListener('click', () => {
+            if (confirm('🔄 确定要重置所有进度吗？')) {
+                state.exp = 0;
+                state.food = 0;
+                state.stars = 0;
+                state.levelUnlocked = 0;
+                state.levelStars = [0, 0, 0, 0, 0];
+                state.levelDone = [false, false, false, false, false];
+                state._quizQuestions = [];
+                state._quizStars = 0;
+                updateDinoUI();
+                renderLevels();
+                showFeedback('🔄 已重置，重新开始冒险吧！', 'info', 1800);
+                showPage('page-home');
+            }
+        });
+
+        // ---------- 导航 ----------
+        dom.btnGoLearn.addEventListener('click', () => {
+            showPage('page-levels');
+            renderLevels();
+        });
+
+        dom.btnGoBattle.addEventListener('click', () => {
+            showPage('page-battle');
+            initBattle();
+            updateDinoUI();
+        });
+
+        dom.btnBackHome.addEventListener('click', () => {
+            showPage('page-home');
+        });
+
+        // ---------- 初始化 ----------
+        function init() {
+            updateDinoUI();
+            renderLevels();
+            showPage('page-home');
+            // 预生成题目
+            state._quizQuestions = [];
+            state._quizStars = 0;
+            // 启动时显示欢迎
+            setTimeout(() => {
+                showFeedback('🦕 欢迎来到恐龙世界！点击 "学习冒险" 开始吧！', 'info', 3000);
+            }, 400);
+        }
+
+        // ---------- 额外： 触屏优化 ----------
+        document.addEventListener('touchstart', () => {}, { passive: true });
+
+        // ---------- 启动 ----------
+        init();
+
+        // 页面离开时保存（简单提示）
+        window.addEventListener('beforeunload', (e) => {
+            // 不做强制保存，纯前端游戏
+        });
+
+        console.log('🦕 恐龙成长大冒险已启动！');
+        console.log('📚 包含拼音、识字、阅读、数学、书写 5大关卡');
+        console.log('⚔️ 对战模式：比大小，赢取食物！');
+        console.log('🌟 让恐龙进化到霸王龙吧！');
+    </script>
+
+</body>
+</html>
